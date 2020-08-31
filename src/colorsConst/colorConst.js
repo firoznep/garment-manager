@@ -1,0 +1,9 @@
+export const HEADER_COLOR = '#7B1FA2';
+export const SUB_HEADER_COLOR = '#4CAF50';
+export const BTN_COLOR = '#F57C00';
+export const BTN_COLOR_TWO = '#FFA000';
+export const MAIN_BTN_COLOR = '#0288D1';
+export const TXT_COLOR = '#C2185B';
+export const DISABLED_COLOR = '#BDBDBD';
+export const BG_COLOR = '#01579B';
+export const TITLE_COLOR = '#9E9E9E';
