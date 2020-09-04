@@ -255,7 +255,6 @@ const SaleDetail = ({
         return 'No Data';
     }
   });
-  // let nameArr = saleReducer.map((val) => val.item_name);
   let arrSet = new Set(nameArr);
   let uniqueArr = [...arrSet];
 
@@ -269,7 +268,10 @@ const SaleDetail = ({
     let d = [];
     let p = [];
     saleReducer.map((v) => {
-      if (v.item_name === filterBy && v.date === newDate) {
+      if (
+        (v.item_name === filterBy && v.date === newDate) ||
+        v.date === filterBy
+      ) {
         d.push(v.total_amt);
         p.push(v.qnt);
       }
@@ -291,7 +293,7 @@ const SaleDetail = ({
     let q = [];
     let a = [];
     saleReducer.map((v) => {
-      if (v.item_name === filterBy) {
+      if (v.item_name === filterBy || v.date === filterBy) {
         q.push(v.qnt);
         a.push(v.total_amt);
       }

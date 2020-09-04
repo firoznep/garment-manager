@@ -17,7 +17,7 @@ const StackNavManage = ({navigation}) => {
         component={Dashboard}
         options={{
           title: 'Dashboard',
-          headerRight: () => (
+          headerLeft: () => (
             <TouchableOpacity
               style={{padding: 10}}
               onPress={() => navigation.toggleDrawer()}>

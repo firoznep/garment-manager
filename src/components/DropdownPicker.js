@@ -4,8 +4,25 @@ import {View} from 'react-native';
 import {Picker} from '@react-native-community/picker';
 import {connect} from 'react-redux';
 
-const DropdownPicker = ({stock, selectedValue, onValueChange}) => {
-  let nameArr = stock.map((val) => val.item_name);
+const DropdownPicker = ({dropdownList, name, selectedValue, onValueChange}) => {
+  let nameArr = dropdownList.map((val) => {
+    // if (name === 'customer_name') {
+    //   return val.customer_name;
+    // }
+
+    // if (name === 'item_name') {
+    //   return val.item_name;
+    // }
+
+    switch (name) {
+      case 'customer_name':
+        return val.customer_name;
+      case 'item_name':
+        return val.item_name;
+      default:
+        return val.item_name;
+    }
+  });
   let arrSet = new Set(nameArr);
   let uniqueArr = [...arrSet];
 

@@ -41,7 +41,7 @@ function App() {
       function (tx, res) {
         console.log('table length: ', res.rows.length);
 
-        if (res.rows.length === 5) {
+        if (res.rows.length <= 2) {
           txn.executeSql('DROP TABLE IF EXISTS stock_table', [], (tx, res) => {
             console.log('stock table deleted');
           });
@@ -80,11 +80,12 @@ function App() {
         drawerContentOptions={{
           activeTintColor: '#e91e63',
           itemStyle: {marginVertical: 5},
-        }}>
+        }}
+        drawerPosition="right">
         <Drawer.Screen
           name="Dashboard"
           component={StackNavManage}
-          options={{drawerLabel: 'Home'}}
+          // options={{drawerLabel: 'Home'}}
         />
         <Drawer.Screen name="ItemStockDetail" component={TabNavManage} />
         <Drawer.Screen name="SaleDetail" component={SaleTavManage} />

@@ -6,7 +6,8 @@ import DropdownPicker from './DropdownPicker';
 const SwitchBetweenPickerAndInput = ({
   selectedValue,
   onValueChange,
-  // onChangeText,
+  dropdownList,
+  name,
 }) => {
   const [switchPickerInput, setSwitchPickerInput] = useState(true);
 
@@ -24,6 +25,8 @@ const SwitchBetweenPickerAndInput = ({
           <DropdownPicker
             selectedValue={selectedValue}
             onValueChange={onValueChange}
+            dropdownList={dropdownList}
+            name={name}
           />
         ) : (
           <CustomInput
