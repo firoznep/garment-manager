@@ -1,0 +1,458 @@
+import React, {useState, useEffect} from 'react';
+import {
+  ScrollView,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  SafeAreaView,
+  KeyboardAvoidingView,
+  Alert,
+  Image,
+} from 'react-native';
+
+import SwitchBetweenPickerAndInput from '../../components/SwitchBetweenPickerAndInput';
+import CustomInput from '../../components/CustomInput';
+import CustomBtn from '../../components/CustomBtn';
+import MessageComponent from '../../components/MessageComponent';
+
+import {connect} from 'react-redux';
+import {Picker} from '@react-native-community/picker';
+
+import {openDatabase} from 'react-native-sqlite-storage';
+var db = openDatabase({name: 'stockDatabase.db'});
+
+import DropdownPicker from '../../components/DropdownPicker';
+import ChangeStatusBarColor from '../../components/ChangeStatusBarColor';
+import {SUB_HEADER_COLOR, BG_COLOR} from '../../colorsConst/colorConst';
+import {addItem, resetItemState} from '../../redux/action/StockAction';
+import {addSale, resetSaleState} from '../../redux/action/saleAction';
+
+const AddSaleItem = ({
+  stock,
+  saleReducer,
+  setStock,
+  setResetState,
+  setSaleReducer,
+  setresetSaleState,
+  navigation,
+}) => {
+  const [customerName, setCustomerName] = useState('Other');
+  const [date, setDate] = useState(new Date().toDateString());
+  const [envNum, setEnvNum] = useState(1);
+  const [itemName, setItemName] = useState('');
+  const [itemSize, setItemSize] = useState('');
+  let [quantity, setQuantity] = useState('');
+  let [unit, setUnit] = useState('');
+  let [salePrice, setSalePrice] = useState('');
+  let [discount, setDiscount] = useState('');
+  let [onCash, setOnCash] = useState('Cash');
+
+  const [saleItemId, setSaleItemId] = useState(0);
+  const [stkQuantity, setStkQuantity] = useState(0);
+  const [stkUnitRate, setStkUnitRate] = useState(0);
+
+  let [imgMime, setImgMime] = useState('image/jpg');
+
+  let stkRemainItem = stkQuantity - quantity;
+  let stkTAmt = stkRemainItem * stkUnitRate;
+
+  let t_amount = salePrice * quantity - discount;
+
+  let [updateMsg, setUpdateMsg] = useState(false);
+
+  const uniqueSizes = () => {
+    let arr = stock.map((i) => (i.item_name === itemName ? i.item_size : null));
+    let filtered = arr.filter((i) => i != null);
+    let unArr = [...new Set(filtered)];
+    return unArr;
+  };
+
+  // FOR TOTAL ITEM QUANTITY
+  const totalQun = () => {
+    let arr = stock.map((i) =>
+      i.item_name === itemName && i.item_size === itemSize ? i.quantity : null,
+    );
+    let filtered = arr.filter((i) => i != null);
+    let setArr = [...new Set(filtered)];
+    const total = (total, num) => total + num;
+    return setArr.reduce(total, 0);
+  };
+
+  // COMPONENT FOR SOLD
+  const SaleDesc = () => {
+    return (
+      // <ScrollView
+      //   style={{borderWidth: 1, flexDirection: 'column', flexWrap: 'wrap'}}>
+      stock.map((item) =>
+        item.item_name === itemName && itemSize === item.item_size ? (
+          <TouchableOpacity
+            style={{
+              // flexDirection: 'row',
+              // flexWrap: 'wrap',
+              backgroundColor: 'gray',
+              borderWidth: 2,
+              // width: 100,
+              margin: 5,
+              // borderWidth: 1,
+              // height: 100,
+            }}
+            onPress={() => {
+              setSaleItemId(item.item_id);
+              setStkQuantity(item.quantity);
+              setStkUnitRate(item.unit_rate);
+            }}
+            key={item.item_id}>
+            <Image
+              source={{
+                uri: `data:${imgMime};base64,${item.img_data}`,
+              }}
+              style={{width: 80, height: 80, margin: 5}}
+            />
+          </TouchableOpacity>
+        ) : null,
+      )
+      // </ScrollView>
+    );
+  };
+
+  let addSale = () => {
+    if (envNum === 0) {
+      alert('Please fill envNum');
+      return;
+    }
+    if (!itemName) {
+      alert('Please fill name');
+      return;
+    }
+    if (!quantity) {
+      alert('Please fill quantity');
+      return;
+    }
+    if (!salePrice) {
+      alert('Please fill salePrice');
+      return;
+    }
+    if (!itemSize) {
+      alert('Please fill itemSize');
+      return;
+    }
+    if (stkRemainItem < 0) {
+      alert(
+        `You have only (${stkQuantity} ${itemName}) in ID N. ${saleItemId}`,
+      );
+      return;
+    }
+
+    db.transaction(function (tx) {
+      tx.executeSql(
+        'INSERT INTO sale_table (date,env_num, customer_name,item_name,item_size, qnt, unit, sale_rate, discount, total_amt,  on_cash) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+        [
+          date,
+          envNum,
+          customerName,
+          itemName,
+          itemSize,
+          quantity,
+          unit,
+          salePrice,
+          discount,
+          t_amount,
+          onCash,
+        ],
+        (tx, results) => {
+          console.log('Results', results.rowsAffected);
+
+          if (results.rowsAffected > 0) {
+            Alert.alert(
+              'Success',
+              'You are Registered Successfully',
+              [
+                {
+                  text: 'Ok',
+                  onPress: () => {
+                    setUpdateMsg(true);
+                    setTimeout(() => {
+                      setUpdateMsg(false);
+                    }, 2000);
+                  },
+                },
+              ],
+              {cancelable: false},
+            );
+          } else alert('Registration Failed');
+        },
+      );
+    });
+
+    // UPDATE STOCK ITEM
+    db.transaction((tx) => {
+      tx.executeSql(
+        'UPDATE stock_table set quantity=?, total_amount=? where item_id=?',
+        [stkRemainItem, stkTAmt, saleItemId],
+      );
+    });
+
+    // const rfr = () => {
+    setResetState();
+    setresetSaleState();
+    // STORE DATA INTO STOCK REDUCER
+    db.transaction((tx) => {
+      tx.executeSql('SELECT * FROM stock_table', [], (tx, results) => {
+        // if (itemStock.length < results.rows.length) {
+        let dt = [];
+        for (let i = 0; i < results.rows.length; ++i) {
+          dt.push(results.rows.item(i));
+        }
+        dt.map((v) => setStock(v));
+      });
+    });
+
+    db.transaction((tx) => {
+      tx.executeSql('SELECT * FROM sale_table', [], (tx, results) => {
+        let d = [];
+        for (let i = 0; i < results.rows.length; ++i) {
+          d.push(results.rows.item(i));
+        }
+        d.map((v) => setSaleReducer(v));
+      });
+    });
+    // };
+
+    // DELETE STOCK ITEM
+    db.transaction((tx) => {
+      tx.executeSql('DELETE FROM stock_table where quantity=0', []);
+    });
+  };
+
+  // GENERATE INV
+  let generateInv = () => {
+    db.transaction((txn) => {
+      txn.executeSql(`SELECT env_num FROM sale_table`, [], (tx, res) => {
+        let env_itm = [];
+        for (let i = 0; i < res.rows.length; ++i) {
+          env_itm.push(res.rows.item(i));
+        }
+        env_itm.map((v) => {
+          if (envNum <= v.env_num) {
+            setEnvNum(v.env_num + 1);
+          }
+        });
+      });
+    });
+  };
+
+  // db.transaction((txn) => {
+  //   txn.executeSql(`select env_num from sale_table`, [], (tx, res) => {
+  //     let c = [];
+  //     for (let i = 0; i < res.rows.length; ++i) {
+  //       c.push(res.rows.item(i));
+  //     }
+  //     console.log(c.map((v) => v.env_num === envNum));
+  //   });
+  // });
+
+  return (
+    <SafeAreaView style={{flex: 1}}>
+      <ChangeStatusBarColor
+        barStyle="light-content"
+        backgroundColor={SUB_HEADER_COLOR}
+      />
+      <View style={{flex: 1, marginHorizontal: 10, marginTop: 20}}>
+        {updateMsg ? <MessageComponent title="Item added to list" /> : null}
+        <ScrollView style={{maxHeight: 80, minHeight: 50}}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+            }}>
+            <View>
+              <Text>Inv N.</Text>
+              <Text>{envNum}</Text>
+            </View>
+            <View>
+              <Text>Pieces Avalable on ID </Text>
+              <Text>{stkQuantity}</Text>
+            </View>
+          </View>
+        </ScrollView>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          style={{maxHeight: 200, minHeight: 200}}>
+          <KeyboardAvoidingView
+            behavior="padding"
+            style={{
+              // flex: 1,
+              justifyContent: 'space-between',
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              backgroundColor: 'yellow',
+            }}>
+            {/* INVOICE NO. */}
+            <TouchableOpacity
+              onPress={generateInv}
+              style={{
+                // flexDirection: 'row',
+                // justifyContent: 'space-between',
+                alignItems: 'center',
+                borderBottomWidth: 1,
+              }}>
+              <Text>INV N. </Text>
+              <Text>{envNum}</Text>
+            </TouchableOpacity>
+
+            {/* CUSTOMER NAME */}
+
+            <View>
+              <SwitchBetweenPickerAndInput
+                title="Select Customer"
+                name="customer_name"
+                selectedValue={customerName}
+                onValueChange={(n) => setCustomerName(n)}
+                dropdownList={saleReducer}
+              />
+            </View>
+
+            <View>
+              <DropdownPicker
+                title="Select Item"
+                name="item_name"
+                selectedValue={itemName}
+                onValueChange={(n) => setItemName(n)}
+                dropdownList={stock}
+              />
+            </View>
+
+            {/* UNIT PICKER */}
+            <View
+              style={{
+                minWidth: 100,
+                // marginHorizontal: 15,
+                // marginTop: 10,
+                borderColor: '#689F38',
+                borderBottomWidth: 1,
+              }}>
+              <Picker
+                style={{
+                  padding: 0,
+                  margin: 0,
+                  // height: 50,
+                  // width: 150,
+                }}
+                selectedValue={unit}
+                onValueChange={(itemValue, itemIndex) => setUnit(itemValue)}>
+                <Picker.Item label="Pcs" value="Pcs" />
+                <Picker.Item label="Metre" value="Metre" />
+                <Picker.Item label="Kg" value="Kg" />
+                <Picker.Item label="L (litre)" value="L (litre)" />
+                <Picker.Item label="Other" value="Other" />
+              </Picker>
+            </View>
+
+            {/* SIZE PICKER */}
+            <View style={{borderBottomWidth: 1, minWidth: 120}}>
+              <Picker
+                selectedValue={itemSize}
+                onValueChange={(v) => setItemSize(v)}>
+                <Picker.Item label={'Select Size'} value={null} />
+                {uniqueSizes().map((elm) => {
+                  return <Picker.Item label={elm} value={elm} key={elm} />;
+                })}
+              </Picker>
+            </View>
+
+            {/* TOTAL QUANTITY */}
+            <View
+              style={{
+                // paddingVertical: 10,
+                borderBottomWidth: 1,
+                // flexDirection: 'row',
+                // justifyContent: 'space-between',
+                alignItems: 'center',
+              }}>
+              <Text>Avalable qnt in Stock</Text>
+              <Text style={{color: 'green', fontWeight: 'bold'}}>
+                {totalQun()}
+              </Text>
+            </View>
+
+            {/* Sale price */}
+            <CustomInput
+              title="Sale Price"
+              placeholder="Sale Price"
+              onChangeText={(price) => setSalePrice(price)}
+              // value={salePrice}
+              keyboardType="numeric"
+            />
+
+            {/* quantity */}
+            <CustomInput
+              title="Quantity"
+              placeholder="Quantity"
+              onChangeText={(qnt) => setQuantity(qnt)}
+              // value={quantity}
+              maxLength={10}
+              keyboardType="numeric"
+            />
+
+            {/* Discount */}
+            <CustomInput
+              title="Discount"
+              placeholder="Discount"
+              onChangeText={(qnt) => setDiscount(qnt)}
+              value={discount}
+              maxLength={10}
+              keyboardType="numeric"
+              // style={{padding: 10}}
+            />
+
+            {/* ON CASH OR CREDIT*/}
+            <View style={{borderBottomWidth: 1, minWidth: 120}}>
+              <Picker
+                style={{padding: 0, margin: 0}}
+                selectedValue={onCash}
+                onValueChange={(v) => setOnCash(v)}>
+                <Picker.Item label="Cash" value="Cash" />
+                <Picker.Item label="Credit" value="Credit" />
+              </Picker>
+            </View>
+          </KeyboardAvoidingView>
+        </ScrollView>
+
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          style={{maxHeight: 150}}>
+          <KeyboardAvoidingView
+            behavior="padding"
+            style={{flexDirection: 'row', flexWrap: 'wrap'}}>
+            <SaleDesc />
+          </KeyboardAvoidingView>
+        </ScrollView>
+
+        <CustomBtn
+          title="Add Sale"
+          onBtnPress={addSale}
+          // style={{
+          //   marginVertical: 10,
+          // }}
+        />
+      </View>
+    </SafeAreaView>
+  );
+};
+
+const mapStateToProps = (state) => ({
+  stock: state.itemStock.reverse(),
+  saleReducer: state.saleReducer.reverse(),
+});
+
+const mapDispatchToProps = (dispatch) => ({
+  setStock: (stk) => dispatch(addItem(stk)),
+  setResetState: () => dispatch(resetItemState()),
+
+  setSaleReducer: (stk) => dispatch(addSale(stk)),
+  setresetSaleState: () => dispatch(resetSaleState()),
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(AddSaleItem);

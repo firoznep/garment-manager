@@ -8,6 +8,7 @@ const SwitchBetweenPickerAndInput = ({
   onValueChange,
   dropdownList,
   name,
+  title,
 }) => {
   const [switchPickerInput, setSwitchPickerInput] = useState(true);
 
@@ -20,17 +21,19 @@ const SwitchBetweenPickerAndInput = ({
         flexWrap: 'wrap',
         // marginVertical: 10,
       }}>
-      <View style={{minWidth: 200}}>
+      <View style={{minWidth: 120}}>
         {switchPickerInput ? (
           <DropdownPicker
             selectedValue={selectedValue}
             onValueChange={onValueChange}
             dropdownList={dropdownList}
             name={name}
+            title={title}
           />
         ) : (
           <CustomInput
-            placeholder="Enter item Name"
+            style={{padding: 0, margin: 0}}
+            placeholder={name}
             onChangeText={onValueChange}
             // value={itemName}
           />
@@ -40,15 +43,15 @@ const SwitchBetweenPickerAndInput = ({
         onPress={() => setSwitchPickerInput(!switchPickerInput)}
         style={{
           backgroundColor: 'grey',
-          width: 50,
-          height: 50,
+          width: 30,
+          height: 30,
           alignItems: 'center',
           // justifyContent: 'center',
         }}>
         <Text
           style={{
             color: 'orange',
-            fontSize: 34,
+            fontSize: 20,
             fontWeight: 'bold',
           }}>
           S

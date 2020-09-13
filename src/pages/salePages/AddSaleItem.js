@@ -1,114 +1,74 @@
 import React, {useState, useEffect} from 'react';
 import {
-  ScrollView,
   View,
   Text,
-  TextInput,
-  TouchableOpacity,
   SafeAreaView,
+  ScrollView,
   KeyboardAvoidingView,
+  TouchableOpacity,
   Alert,
   Image,
 } from 'react-native';
 
-import SwitchBetweenPickerAndInput from '../../components/SwitchBetweenPickerAndInput';
-import CustomInput from '../../components/CustomInput';
-import CustomBtn from '../../components/CustomBtn';
-import MessageComponent from '../../components/MessageComponent';
-
-import {connect} from 'react-redux';
-import {Picker} from '@react-native-community/picker';
-
+// DATABASE
 import {openDatabase} from 'react-native-sqlite-storage';
-import DropdownPicker from '../../components/DropdownPicker';
 var db = openDatabase({name: 'stockDatabase.db'});
 
-const AddSaleItem = ({stock, saleReducer, navigation}) => {
-  const [customerName, setCustomerName] = useState('Other');
+import {connect} from 'react-redux';
+import {addItem, resetItemState} from '../../redux/action/StockAction';
+import {addSale, resetSaleState} from '../../redux/action/saleAction';
+import ChangeStatusBarColor from '../../components/ChangeStatusBarColor';
+import {
+  SUB_HEADER_COLOR,
+  DISABLED_COLOR,
+  TXT_COLOR,
+} from '../../colorsConst/colorConst';
+import SwitchBetweenPickerAndInput from '../../components/SwitchBetweenPickerAndInput';
+import DropdownPicker from '../../components/DropdownPicker';
+import {Picker} from '@react-native-community/picker';
+import {uniqueSizes, totalQnt} from '../../components/getDataFromStock';
+import CustomInput from '../../components/CustomInput';
+import CustomBtn from '../../components/CustomBtn';
+
+// MAIN FUNC======================================================
+const AddSaleItem = ({
+  stockReducer,
+  saleReducer,
+  setStock,
+  resetStock,
+  setSaleReducer,
+  resetSaleReducer,
+}) => {
+  // USESTATE HOOKS
   const [date, setDate] = useState(new Date().toDateString());
-  const [envNum, setEnvNum] = useState(1);
+  const [envNum, setEnvNum] = useState(
+    `${new Date().getMonth()}-${new Date().getDate()}-${new Date().getHours()}-${new Date().getMinutes()}-${new Date().getSeconds()}`,
+  );
+  const [customerName, setCustomerName] = useState('Other');
+  const [customerAddress, setCustomerAddress] = useState('No Address');
+  const [customerContact, setCustomerContact] = useState('No Contact');
   const [itemName, setItemName] = useState('');
   const [itemSize, setItemSize] = useState('');
-  let [quantity, setQuantity] = useState('');
-  let [unit, setUnit] = useState('');
-  let [salePrice, setSalePrice] = useState('');
-  let [discount, setDiscount] = useState('');
-  let [onCash, setOnCash] = useState('Cash');
-
-  const [saleItemId, setSaleItemId] = useState(0);
-  const [stkQuantity, setStkQuantity] = useState(0);
-  const [stkUnitRate, setStkUnitRate] = useState(0);
-
-  let [imgMime, setImgMime] = useState('image/jpg');
-
-  let stkRemainItem = stkQuantity - quantity;
-  let stkTAmt = stkRemainItem * stkUnitRate;
+  const [quantity, setQuantity] = useState('');
+  const [unit, setUnit] = useState('Pcs');
+  const [salePrice, setSalePrice] = useState('');
+  const [discount, setDiscount] = useState('');
+  const [paidAmount, setPaidAmount] = useState('');
+  // const [balance, setBalance] = useState('');
 
   let t_amount = salePrice * quantity - discount;
+  let balance = t_amount - paidAmount;
 
-  let [updateMsg, setUpdateMsg] = useState(false);
+  const [imgMime, setImgMime] = useState('image/jpg');
 
-  const incrementEnv = () => {
-    setEnvNum(lst_elm);
-  };
-  const uniqueSizes = () => {
-    let arr = stock.map((i) => (i.item_name === itemName ? i.item_size : null));
-    let filtered = arr.filter((i) => i != null);
-    let unArr = [...new Set(filtered)];
-    return unArr;
-  };
+  // GET STOCK DATA
+  // const [stkQuantity, setStkQuantity] = useState(0);
+  // const [stkUnitRate, setStkUnitRate] = useState(0);
+  // const [saleItemId, setSaleItemId] = useState(0);
 
-  // FOR TOTAL ITEM QUANTITY
-  const totalQun = () => {
-    let arr = stock.map((i) =>
-      i.item_name === itemName && i.item_size === itemSize ? i.quantity : null,
-    );
-    let filtered = arr.filter((i) => i != null);
-    let setArr = [...new Set(filtered)];
-    const total = (total, num) => total + num;
-    return setArr.reduce(total, 0);
-  };
+  // // =--===-=----------------------------------------------------------
 
-  // COMPONENT FOR SOLD
-  const SaleDesc = () => {
-    return (
-      <View
-        style={{
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          justifyContent: 'space-around',
-        }}>
-        {stock.map((item) =>
-          item.item_name === itemName && itemSize === item.item_size ? (
-            <TouchableOpacity
-              onPress={() => {
-                setSaleItemId(item.item_id);
-                setStkQuantity(item.quantity);
-                setStkUnitRate(item.unit_rate);
-              }}
-              key={item.item_id}>
-              <Image
-                source={{
-                  uri: `data:${imgMime};base64,${item.img_data}`,
-                }}
-                style={{width: 80, height: 80, margin: 5}}
-              />
-            </TouchableOpacity>
-          ) : null,
-        )}
-      </View>
-    );
-  };
-
-  const generateInv = () => {
-    setEnvNum(envNum + 1);
-  };
-
-  let addSale = () => {
-    if (envNum === 0) {
-      alert('Please fill envNum');
-      return;
-    }
+  let addSaleToDatabase = () => {
     if (!itemName) {
       alert('Please fill name');
       return;
@@ -121,24 +81,27 @@ const AddSaleItem = ({stock, saleReducer, navigation}) => {
       alert('Please fill salePrice');
       return;
     }
-    if (!itemSize) {
-      alert('Please fill itemSize');
-      return;
-    }
-    if (stkRemainItem < 0) {
-      alert(
-        `You have only (${stkQuantity} ${itemName}) in ID N. ${saleItemId}`,
-      );
-      return;
-    }
+    // if (!itemSize) {
+    //   alert('Please fill itemSize');
+    //   return;
+    // }
+
+    // if (stkRemainItem < 0) {
+    //   alert(
+    //     `You have only (${stkQuantity} ${itemName}) in ID N. ${saleItemId}`,
+    //   );
+    //   return;
+    // }
 
     db.transaction(function (tx) {
       tx.executeSql(
-        'INSERT INTO sale_table (date,env_num, customer_name,item_name,item_size, qnt, unit, sale_rate, discount, total_amt,  on_cash) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+        'INSERT INTO sale_table (date, env_num, customer_name, customer_address, customer_contact, item_name, item_size, qnt, unit, sale_rate, discount, total_amt,  paid, balance) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
         [
           date,
           envNum,
           customerName,
+          customerAddress,
+          customerContact,
           itemName,
           itemSize,
           quantity,
@@ -146,181 +109,188 @@ const AddSaleItem = ({stock, saleReducer, navigation}) => {
           salePrice,
           discount,
           t_amount,
-          onCash,
+          paidAmount,
+          balance,
         ],
         (tx, results) => {
           console.log('Results', results.rowsAffected);
 
           if (results.rowsAffected > 0) {
-            Alert.alert(
-              'Success',
-              'You are Registered Successfully',
-              [
-                {
-                  text: 'Ok',
-                  onPress: () => {
-                    setUpdateMsg(true);
-                    setTimeout(() => {
-                      setUpdateMsg(false);
-                    }, 2000);
-                  },
-                },
-              ],
-              {cancelable: false},
-            );
-          } else alert('Registration Failed');
+            alert('Sale Added Successfully');
+          } else alert('Process Failed');
         },
       );
     });
 
-    // UPDATE STOCK ITEM
-    db.transaction((tx) => {
-      tx.executeSql(
-        'UPDATE stock_table set quantity=?, total_amount=? where item_id=?',
-        [stkRemainItem, stkTAmt, saleItemId],
-      );
-    });
-
-    // DELETE STOCK ITEM
-    db.transaction((tx) => {
-      tx.executeSql('DELETE FROM stock_table where quantity=0', []);
+    setSaleReducer({
+      date: date,
+      env_num: envNum,
+      customer_name: customerName,
+      customer_address: customerAddress,
+      customer_contact: customerContact,
+      item_name: itemName,
+      item_size: itemSize,
+      qnt: quantity,
+      unit: unit,
+      sale_rate: salePrice,
+      discount: discount,
+      total_amt: t_amount,
+      paid: paidAmount,
+      balance: balance,
     });
   };
+  //------------- end addSale ---------------------------------------------------------------
+
+  // GENERATE INV
+  const generateInv = () => {
+    setEnvNum(
+      `${new Date().getMonth()}-${new Date().getDate()}-${new Date().getHours()}-${new Date().getMinutes()}-${new Date().getSeconds()}`,
+    );
+  };
+  // ----------------------------------------------------------------------
+
+  // COMPONENT FOR SOLD
+  // const SaleDesc = () => {
+  //   return stockReducer.map((item) =>
+  //     item.item_name === itemName && itemSize === item.item_size ? (
+  //       <TouchableOpacity
+  //         style={{
+  //           // backgroundColor: 'gray',
+  //           // borderWidth: 2,
+  //           margin: 5,
+  //           alignItems: 'center',
+  //         }}
+  //         // onPress={() => {
+  //         //   setSaleItemId(item.item_id);
+  //         //   setStkQuantity(item.quantity);
+  //         //   setStkUnitRate(item.unit_rate);
+  //         // }}
+  //         key={item.item_id}>
+  //         <Image
+  //           source={{
+  //             uri: `data:${imgMime};base64,${item.img_data}`,
+  //           }}
+  //           style={{width: 80, height: 80, margin: 5}}
+  //         />
+  //         <Text>Pieces: {item.quantity}</Text>
+  //       </TouchableOpacity>
+  //     ) : null,
+  //   );
+  // };
+  // ----------------------------------------------------------
 
   return (
     <SafeAreaView style={{flex: 1}}>
-      <View style={{flex: 1, marginHorizontal: 20, marginTop: 20}}>
-        <ScrollView>
-          <SaleDesc />
-        </ScrollView>
-        <View
-          style={{
-            flexDirection: 'row',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-          }}>
-          <Text style={{color: 'gray'}}>INV N0: </Text>
-          <Text>{envNum}</Text>
-          <Text style={{color: 'gray'}}> price: </Text>
-          <Text>{salePrice}</Text>
-          <Text style={{color: 'gray'}}> * qnt: </Text>
-          <Text>{quantity}</Text>
-          <Text style={{color: 'gray'}}> = Total: </Text>
-          <Text>{quantity * salePrice - discount}</Text>
-          <Text> customer name = {customerName}</Text>
+      <ChangeStatusBarColor
+        barStyle="light-content"
+        backgroundColor={SUB_HEADER_COLOR}
+      />
 
-          <Text> -saleItemId = {saleItemId}</Text>
-          <Text> -stkQuantity = {stkQuantity}</Text>
-          <Text> -stkUnitRate = {stkUnitRate}</Text>
-        </View>
-
-        <ScrollView keyboardShouldPersistTaps="handled">
+      <View style={{flex: 1}}>
+        <Text>saleReducer length{saleReducer.length}</Text>
+        <Text>Balance: {balance}</Text>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          style={{maxHeight: 180, backgroundColor: 'yellow', padding: 8}}>
           <KeyboardAvoidingView
             behavior="padding"
-            style={{flex: 1, justifyContent: 'space-between', padding: 20}}>
-            {/* get item pic */}
-
+            style={{
+              // flex: 1,
+              justifyContent: 'space-between',
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+            }}>
             {/* INVOICE NO. */}
-            <View
+            <TouchableOpacity
+              onPress={generateInv}
               style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
+                // flexDirection: 'row',
+                // justifyContent: 'space-between',
+                alignItems: 'center',
                 borderBottomWidth: 1,
               }}>
-              <Text onPress={generateInv}>INVOICE NO. = </Text>
-              <Text
-                style={{
-                  borderWidth: 1,
-                  paddingVertical: 5,
-                  paddingHorizontal: 10,
-                  borderBottomWidth: 0,
-                }}>
-                {envNum}
-              </Text>
-            </View>
+              <Text>INV N. </Text>
+              <Text>{envNum}</Text>
+            </TouchableOpacity>
 
             {/* CUSTOMER NAME */}
-            {/* <CustomInput
-              title="Customer Name"
-              placeholder="Customer Name"
-              onChangeText={(n) => setCustomerName(n)}
-            /> */}
+            <View>
+              <SwitchBetweenPickerAndInput
+                title="Customer Name"
+                name="customer_name"
+                selectedValue={customerName}
+                onValueChange={(n) => setCustomerName(n)}
+                dropdownList={saleReducer}
+              />
+            </View>
 
-            <Text>Customer name</Text>
-            <SwitchBetweenPickerAndInput
-              name="customer_name"
-              selectedValue={customerName}
-              onValueChange={(n) => setCustomerName(n)}
-              dropdownList={saleReducer}
-            />
+            {/* CUSTOMER ADDRESS */}
+            <View>
+              <SwitchBetweenPickerAndInput
+                title="Customer Address"
+                name="customer_address"
+                selectedValue={customerAddress}
+                onValueChange={(n) => setCustomerAddress(n)}
+                dropdownList={saleReducer}
+              />
+            </View>
 
-            {/* <SwitchBetweenPickerAndInput
-              name="item_name"
-              selectedValue={itemName}
-              onValueChange={(n) => setItemName(n)}
-              dropdownList={stock}
-            /> */}
+            {/* CUSTOMER Contact */}
+            <View>
+              <SwitchBetweenPickerAndInput
+                title="Customer Contact"
+                name="customer_contact"
+                selectedValue={customerContact}
+                onValueChange={(n) => setCustomerContact(n)}
+                dropdownList={saleReducer}
+              />
+            </View>
 
-            <DropdownPicker
-              name="item_name"
-              selectedValue={itemName}
-              onValueChange={(n) => setItemName(n)}
-              dropdownList={stock}
-            />
-
-            {/* unit 
-            <CustomInput
-              title="unit"
-              placeholder="unit"
-              onChangeText={(n) => setUnit(n)}
-            /> */}
-
-            {/* UNIT PICKER */}
-            <View
+            {/* QUANTITY BY ID*/}
+            {/* <View
               style={{
-                // marginHorizontal: 15,
-                marginTop: 10,
-                borderColor: '#689F38',
+                paddingLeft: 10,
                 borderBottomWidth: 1,
+                alignItems: 'center',
               }}>
-              <Picker
-                selectedValue={unit}
-                style={{
-                  height: 50,
-                  // width: 150,
-                }}
-                onValueChange={(itemValue, itemIndex) => setUnit(itemValue)}>
-                <Picker.Item label="Pcs" value="Pcs" />
-                <Picker.Item label="Metre" value="Metre" />
-                <Picker.Item label="Kg" value="Kg" />
-                <Picker.Item label="L (litre)" value="L (litre)" />
-                <Picker.Item label="Other" value="Other" />
-              </Picker>
+              <Text style={{color: TXT_COLOR}}>qnt by ID</Text>
+              <Text style={{color: 'green', fontWeight: 'bold'}}>
+                {stkQuantity}
+              </Text>
+            </View> */}
+
+            {/* ITEM NAME */}
+            <View>
+              <DropdownPicker
+                title="Select Product"
+                name="item_name"
+                selectedValue={itemName}
+                onValueChange={(n) => setItemName(n)}
+                dropdownList={stockReducer}
+              />
             </View>
 
             {/* SIZE PICKER */}
-            <View style={{borderBottomWidth: 1}}>
+            <View style={{borderBottomWidth: 1, minWidth: 110, height: 40}}>
               <Picker
                 selectedValue={itemSize}
                 onValueChange={(v) => setItemSize(v)}>
-                <Picker.Item label={'Select Size'} value={null} />
-                {uniqueSizes().map((elm) => {
+                <Picker.Item label={'Size'} value={null} />
+                {uniqueSizes(stockReducer, itemName).map((elm) => {
                   return <Picker.Item label={elm} value={elm} key={elm} />;
                 })}
               </Picker>
             </View>
 
-            {/* TOTAL QUANTITY */}
+            {/* QUANTITY IN STOCK*/}
             <View
               style={{
-                padding: 10,
                 borderBottomWidth: 1,
-                flexDirection: 'row',
-                justifyContent: 'space-between',
+                alignItems: 'center',
               }}>
-              <Text>Avalable qnt in Stock=</Text>
-              <Text style={{fontSize: 16, color: 'green', fontWeight: 'bold'}}>
-                {totalQun()}
+              <Text style={{color: TXT_COLOR}}>qnt in Stock</Text>
+              <Text style={{color: 'green', fontWeight: 'bold'}}>
+                {totalQnt(stockReducer, itemName, itemSize)}
               </Text>
             </View>
 
@@ -351,38 +321,55 @@ const AddSaleItem = ({stock, saleReducer, navigation}) => {
               value={discount}
               maxLength={10}
               keyboardType="numeric"
-              style={{padding: 10}}
+            />
+
+            {/* Paid Amount */}
+            <CustomInput
+              style={{color: 'green'}}
+              title="Paid Amount"
+              placeholder="Paid Amount"
+              onChangeText={(qnt) => setPaidAmount(qnt)}
+              value={paidAmount}
+              maxLength={10}
+              keyboardType="numeric"
             />
 
             {/* ON CASH OR CREDIT*/}
-            <View style={{borderBottomWidth: 1}}>
+            {/* <View style={{borderBottomWidth: 1, minWidth: 110}}>
               <Picker
+                style={{padding: 0, margin: 0}}
                 selectedValue={onCash}
                 onValueChange={(v) => setOnCash(v)}>
                 <Picker.Item label="Cash" value="Cash" />
                 <Picker.Item label="Credit" value="Credit" />
               </Picker>
-            </View>
-
-            {updateMsg ? <MessageComponent title="Item added to list" /> : null}
-
-            <CustomBtn
-              title="Add Sale"
-              onBtnPress={addSale}
-              style={{
-                marginVertical: 10,
-              }}
-            />
+            </View> */}
           </KeyboardAvoidingView>
         </ScrollView>
+
+        <CustomBtn
+          title="Add Sale"
+          onBtnPress={addSaleToDatabase}
+          // style={{
+          //   marginVertical: 10,
+          // }}
+        />
       </View>
     </SafeAreaView>
   );
 };
 
 const mapStateToProps = (state) => ({
-  stock: state.itemStock.reverse(),
+  stockReducer: state.itemStock.reverse(),
   saleReducer: state.saleReducer.reverse(),
 });
 
-export default connect(mapStateToProps)(AddSaleItem);
+const mapDispatchToProps = (dispatch) => ({
+  setStock: (stk) => dispatch(addItem(stk)),
+  resetStock: () => dispatch(resetItemState()),
+
+  setSaleReducer: (stk) => dispatch(addSale(stk)),
+  resetSaleReducer: () => dispatch(resetSaleState()),
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(AddSaleItem);

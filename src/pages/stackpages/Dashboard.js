@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {View, Text, StatusBar, TouchableHighlight} from 'react-native';
 import ChangeStatusBarColor from '../../components/ChangeStatusBarColor';
-import {HEADER_COLOR} from '../../colorsConst/colorConst';
+import {HEADER_COLOR, BG_COLOR} from '../../colorsConst/colorConst';
 import {connect} from 'react-redux';
 
 // FOR DATABASE SQLITE
@@ -10,100 +10,122 @@ let db = openDatabase({name: 'stockDatabase.db'});
 
 import {addItem, resetItemState} from '../../redux/action/StockAction';
 import {addSale, resetSaleState} from '../../redux/action/saleAction';
+import AddPurchase from '../purchasePages/AddPurchase';
+import {addPurchaseAction} from '../../redux/action/purchaseAction';
+import {
+  addEmpAction,
+  addEmpProductAction,
+} from '../../redux/action/employeeAction';
 
 const Dashboard = ({
   itemStock,
   setStock,
+
   saleReducer,
-  setResetState,
   setSaleReducer,
-  setresetSaleState,
+
+  purchaseReducer,
+  setPurchaseReducer,
+
+  empReducer,
+  setEmpReducer,
+
+  empProductReducer,
+  setEmpProductReducer,
 }) => {
   useEffect(() => {
     rfr();
   }, []);
 
-  const [tLen, setTLen] = useState('');
-  const [tRow1, settRow1] = useState('');
-  const [tRow2, settRow2] = useState('');
-  const [tRow3, settRow3] = useState('');
-  const [tRow4, settRow4] = useState('');
-
   const rfr = () => {
-    setResetState();
-    setresetSaleState();
     // STORE DATA INTO STOCK REDUCER
     db.transaction((tx) => {
       tx.executeSql('SELECT * FROM stock_table', [], (tx, results) => {
-        // if (itemStock.length < results.rows.length) {
-        let dt = [];
         for (let i = 0; i < results.rows.length; ++i) {
-          dt.push(results.rows.item(i));
+          setStock(results.rows.item(i));
         }
-        dt.map((v) => setStock(v));
       });
     });
 
+    // STORE DATA INTO purchase REDUCER
+    db.transaction((tx) => {
+      tx.executeSql('SELECT * FROM purchase_table', [], (tx, results) => {
+        for (let i = 0; i < results.rows.length; ++i) {
+          setPurchaseReducer(results.rows.item(i));
+        }
+      });
+    });
+
+    // STORE DATA INTO SALE_TABLE
     db.transaction((tx) => {
       tx.executeSql('SELECT * FROM sale_table', [], (tx, results) => {
-        let d = [];
         for (let i = 0; i < results.rows.length; ++i) {
-          d.push(results.rows.item(i));
+          setSaleReducer(results.rows.item(i));
         }
-        d.map((v) => setSaleReducer(v));
       });
     });
 
-    db.transaction(function (txn) {
-      txn.executeSql(
-        "SELECT name FROM sqlite_master WHERE type='table'",
+    // STORE DATA INTO EMP_TABLE
+    db.transaction((tx) => {
+      tx.executeSql('SELECT * FROM employee_table', [], (tx, results) => {
+        for (let i = 0; i < results.rows.length; ++i) {
+          setEmpReducer(results.rows.item(i));
+        }
+      });
+    });
+
+    // STORE DATA INTO emp_product_ready_table
+    db.transaction((tx) => {
+      tx.executeSql(
+        'SELECT * FROM emp_product_ready_table',
         [],
-        function (tx, res) {
-          let d = [];
-          for (let i = 0; i < res.rows.length; ++i) {
-            d.push(res.rows.item(i));
+        (tx, results) => {
+          for (let i = 0; i < results.rows.length; ++i) {
+            setEmpProductReducer(results.rows.item(i));
           }
-          setTLen(d.length);
-          settRow1(d[0].name);
-          settRow2(d[1].name);
-          settRow3(d[2].name);
-          settRow4(d[3].name);
         },
       );
     });
   };
+
   return (
     <View style={{alignItems: 'center'}}>
       <ChangeStatusBarColor
         barStyle="light-content"
         backgroundColor={HEADER_COLOR}
       />
-      <TouchableHighlight onPress={rfr}>
-        <Text>Refresh</Text>
+      <TouchableHighlight style={{padding: 10, backgroundColor: BG_COLOR}}>
+        <Text style={{color: '#fff'}}>Refresh</Text>
       </TouchableHighlight>
       <Text>Item Stock length: {itemStock.length}</Text>
       <Text>sale items length: {saleReducer.length}</Text>
-      <Text>table length: {tLen}</Text>
-      <Text>table 1: {tRow1}</Text>
-      <Text>table 2: {tRow2}</Text>
-      <Text>table 3: {tRow3}</Text>
-      <Text>table 4: {tRow4}</Text>
+      <Text>purchase items length: {purchaseReducer.length}</Text>
+      <Text>Employees length: {empReducer.length}</Text>
+      <Text>Employees Product length: {empProductReducer.length}</Text>
     </View>
   );
 };
 
 const mapStateToProps = (state) => ({
   itemStock: state.itemStock.reverse(),
-
+  purchaseReducer: state.purchaseReducer.reverse(),
   saleReducer: state.saleReducer.reverse(),
+  empReducer: state.empReducer.reverse(),
+  empProductReducer: state.empProductReducer.reverse(),
 });
 
 const mapDispatchToProps = (dispatch) => ({
   setStock: (stk) => dispatch(addItem(stk)),
-  setResetState: () => dispatch(resetItemState()),
+  // setResetState: () => dispatch(resetItemState()),
+
+  setPurchaseReducer: (pur) => dispatch(addPurchaseAction(pur)),
 
   setSaleReducer: (stk) => dispatch(addSale(stk)),
-  setresetSaleState: () => dispatch(resetSaleState()),
+  // setresetSaleState: () => dispatch(resetSaleState()),
+
+  setEmpReducer: (stk) => dispatch(addEmpAction(stk)),
+
+  setEmpProductReducer: (stk) => dispatch(addEmpProductAction(stk)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Dashboard);

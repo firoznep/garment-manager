@@ -34,7 +34,6 @@ import {Picker} from '@react-native-community/picker';
 import MessageComponent from '../../components/MessageComponent';
 
 const ItemStocksDetail = ({itemStock, setStock, setResetState, navigation}) => {
-  const [refreshing, setRefreshing] = useState(false);
   let [imgMime, setImgMime] = useState('image/jpg');
 
   const [shorting, setShorting] = useState('name');
@@ -159,7 +158,7 @@ const ItemStocksDetail = ({itemStock, setStock, setResetState, navigation}) => {
             <Text style={styles.resultTxt}>A9{item.total_amount}5T</Text>
           </View>
           {/*  */}
-          <Text style={styles.selfView}>{item.description}</Text>
+          <Text style={styles.selfView}>{item.ext}</Text>
         </View>
       </SafeAreaView>
     );
@@ -192,7 +191,10 @@ const ItemStocksDetail = ({itemStock, setStock, setResetState, navigation}) => {
     let d = [];
     let p = [];
     itemStock.map((v) => {
-      if (v.item_name === filterBy && v.date === newDate) {
+      if (
+        (v.item_name === filterBy && v.date === newDate) ||
+        v.date === filterBy
+      ) {
         d.push(v.total_amount);
         p.push(v.quantity);
       }
@@ -214,7 +216,7 @@ const ItemStocksDetail = ({itemStock, setStock, setResetState, navigation}) => {
     let q = [];
     let a = [];
     itemStock.map((v) => {
-      if (v.item_name === filterBy) {
+      if (v.item_name === filterBy || v.date === filterBy) {
         q.push(v.quantity);
         a.push(v.total_amount);
       }

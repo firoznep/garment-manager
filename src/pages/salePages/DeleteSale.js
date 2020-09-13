@@ -188,19 +188,19 @@ const DeleteSale = ({navigation, saleReducer}) => {
                 </TouchableOpacity>
               ) : null,
             )}
-            <View style={{alignItems: 'center', marginBottom: 20}}>
-              <CustomBtn
-                style={{
-                  backgroundColor: 'red',
-                  alignItems: 'center',
-                  padding: 15,
-                  paddingHorizontal: 40,
-                }}
-                title="Delete"
-                onBtnPress={deleteSaleItem}
-              />
-            </View>
           </ScrollView>
+          <View style={{alignItems: 'center', marginBottom: 20}}>
+            <CustomBtn
+              style={{
+                backgroundColor: 'red',
+                alignItems: 'center',
+                padding: 15,
+                paddingHorizontal: 40,
+              }}
+              title="Delete"
+              onBtnPress={deleteSaleItem}
+            />
+          </View>
         </View>
       </View>
     </SafeAreaView>

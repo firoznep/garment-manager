@@ -229,7 +229,7 @@ const SaleDetail = ({
         </View>
         {/*  */}
 
-        {/* ITEM size */}
+        {/* PAID AMOUNT */}
         <View
           style={{
             flexDirection: 'row',
@@ -238,7 +238,7 @@ const SaleDetail = ({
             borderBottomWidth: 1,
           }}>
           <Text>Payment =</Text>
-          <Text>{item.on_cash}</Text>
+          <Text>{item.balance}</Text>
         </View>
       </View>
     );

@@ -11,6 +11,9 @@ const MessageComponent = (props) => {
         padding: 10,
         width: '100%',
         alignItems: 'center',
+        position: 'absolute',
+        top: 5,
+        zIndex: 100,
       }}>
       <Text style={{color: '#fff', fontSize: 20}}>{props.title}</Text>
     </View>
