@@ -3,7 +3,6 @@ import {
   View,
   ScrollView,
   KeyboardAvoidingView,
-  Alert,
   SafeAreaView,
   Image,
   Text,
@@ -15,6 +14,8 @@ import ImagePicker from 'react-native-image-crop-picker';
 
 import {connect} from 'react-redux';
 
+import nextId from 'react-id-generator';
+
 // FOR DATABASE SQLITE
 import {openDatabase} from 'react-native-sqlite-storage';
 var db = openDatabase({name: 'stockDatabase.db'});
@@ -24,13 +25,9 @@ import CustomInput from '../../components/CustomInput';
 import CustomBtn from '../../components/CustomBtn';
 
 import {DEFAULT_CROPED_IMG} from '../../data/imgCropedData';
-import {
-  BTN_COLOR,
-  BTN_COLOR_TWO,
-  SUB_HEADER_COLOR,
-} from '../../colorsConst/colorConst';
+import {SUB_HEADER_COLOR} from '../../colorsConst/colorConst';
 import ChangeStatusBarColor from '../../components/ChangeStatusBarColor';
-import {addItem, resetItemState} from '../../redux/action/StockAction';
+import {addItem} from '../../redux/action/StockAction';
 import MessageComponent from '../../components/MessageComponent';
 import SwitchBetweenPickerAndInput from '../../components/SwitchBetweenPickerAndInput';
 
@@ -56,6 +53,11 @@ const AddStocksItem = ({navigation, itemStock, setStock}) => {
   const [imgData, setImgData] = useState(DEFAULT_CROPED_IMG);
 
   const [updateMsg, setUpdateMsg] = useState(false);
+
+  // SET IMAGE WIDTH AND HEIGHT
+  const [imgSizeToggle, setImgSizeToggle] = useState(false);
+  const [imgWidth, setImgWidth] = useState(120);
+  const [imgHeight, setImgHeight] = useState(100);
 
   // GET IMAGE FROM GALLERY
   const imgFromGallery = () => {
@@ -89,16 +91,6 @@ const AddStocksItem = ({navigation, itemStock, setStock}) => {
       });
   };
 
-  // // GET ID FROM ITEM STOCK AND SET NEW PEMPORARY ID TO ITEM STOCK
-  // let ts = itemStock.map((v) => v.item_id);
-  // let newId = 1;
-
-  // for (let i = 0; i < ts.length; i++) {
-  //   if (ts[i] > newId) {
-  //     newId = ts[i];
-  //   }
-  // }
-
   let add_stock = () => {
     if (!itemName) {
       alert('Please fill name');
@@ -130,14 +122,14 @@ const AddStocksItem = ({navigation, itemStock, setStock}) => {
         ],
         (tx, results) => {
           if (results.rowsAffected > 0) {
-            setUnitRate('');
-            setQuantity('');
-            setExtra('');
-
             setUpdateMsg(true);
             setTimeout(() => {
               setUpdateMsg(false);
             }, 2000);
+
+            setUnitRate('');
+            setQuantity('');
+            setExtra('');
           } else {
             alert('Process Failed');
           }
@@ -158,34 +150,23 @@ const AddStocksItem = ({navigation, itemStock, setStock}) => {
     });
 
     setRenderStock([
-      ...renderStock,
       {
-        item: itemName,
+        item_id: nextId(),
+        date: date,
+        item_name: itemName,
+        item_size: itemSize,
         quantity: quantity,
-        price: unitRate,
-        extra: extra,
-        size: itemSize,
-        total: t_amount,
+        unit: unit,
+        unit_rate: unitRate,
+        ext: extra,
+        total_amount: t_amount,
       },
+      ...renderStock,
     ]);
   };
 
-  // end add stock ---------------------------------------------------------------
-  // GENERATE INV
-  // const generateInv = () => {
-  //   setInvNum(
-  //     `${new Date().getMonth()}-${new Date().getDate()}-${new Date().getHours()}-${new Date().getMinutes()}-${new Date().getSeconds()}`,
-  //   );
-  //   setRenderStock([]);
-  // };
-
-  // const renderStockItem = () => {
-  //   setRenderStock(...renderStock, {item: itemName, price: unitRate});
-  //   return renderStock.map((v) => <Text>item:{v.item}</Text>);
-  // };
-
   const GetTotal = () => {
-    let t = renderStock.map((v) => v.total);
+    let t = renderStock.map((v) => v.total_amount);
 
     const reducer = (accumulator, currentValue) => accumulator + currentValue;
 
@@ -204,6 +185,17 @@ const AddStocksItem = ({navigation, itemStock, setStock}) => {
     );
   };
 
+  useEffect(() => {
+    if (imgSizeToggle) {
+      setImgWidth(330);
+      setImgHeight(400);
+    } else {
+      setImgWidth(120);
+      setImgHeight(100);
+    }
+  });
+
+  // MAIN RETURN
   return (
     <SafeAreaView>
       <ChangeStatusBarColor backgroundColor={SUB_HEADER_COLOR} />
@@ -214,8 +206,6 @@ const AddStocksItem = ({navigation, itemStock, setStock}) => {
       {/* ADD STOCKS FIELDS */}
       <View
         style={{
-          // paddingHorizontal: 20,
-          // marginTop: 20,
           minHeight: 325,
         }}>
         <ScrollView keyboardShouldPersistTaps="handled">
@@ -226,6 +216,7 @@ const AddStocksItem = ({navigation, itemStock, setStock}) => {
               flexDirection: 'row',
               flexWrap: 'wrap',
               justifyContent: 'space-between',
+              alignItems: 'center',
               borderBottomWidth: 5,
               borderBottomColor: 'gray',
               padding: 20,
@@ -236,19 +227,20 @@ const AddStocksItem = ({navigation, itemStock, setStock}) => {
                 alignItems: 'center',
                 borderBottomWidth: 1,
               }}>
-              <Image
-                source={{
-                  uri: `data:${imgMime};base64,${imgData}`,
-                }}
-                style={{
-                  marginTop: 10,
-                  width: 120,
-                  height: 100,
-                  borderRadius: 10,
-                }}
-                // resizeMode="contain"
-              />
-
+              <TouchableOpacity
+                onPress={() => setImgSizeToggle(!imgSizeToggle)}>
+                <Image
+                  source={{
+                    uri: `data:${imgMime};base64,${imgData}`,
+                  }}
+                  style={{
+                    width: imgWidth,
+                    height: imgHeight,
+                    borderRadius: 10,
+                  }}
+                  // resizeMode="contain"
+                />
+              </TouchableOpacity>
               <View
                 style={{
                   flexDirection: 'row',
@@ -258,33 +250,22 @@ const AddStocksItem = ({navigation, itemStock, setStock}) => {
                   justifyContent: 'center',
                 }}>
                 <CustomBtn
-                  title="image from Gallery"
+                  txtColor="green"
+                  title="Image From Gallery"
                   onBtnPress={imgFromGallery}
-                  style={{width: '50%', backgroundColor: 'green'}}
+                  style={{width: '50%'}}
                 />
 
                 <CustomBtn
+                  txtColor="green"
                   title="Take photo"
                   onBtnPress={imgFromCamera}
                   style={{
                     width: '40%',
-                    backgroundColor: 'green',
                   }}
                 />
               </View>
             </View>
-
-            {/* <TouchableOpacity
-              onPress={generateInv}
-              style={{
-                // flexDirection: 'row',
-                // justifyContent: 'space-between',
-                alignItems: 'center',
-                borderBottomWidth: 1,
-              }}>
-              <Text>INV N. </Text>
-              <Text>{invNum}</Text>
-            </TouchableOpacity> */}
 
             {/* item name */}
             <View>
@@ -292,7 +273,7 @@ const AddStocksItem = ({navigation, itemStock, setStock}) => {
                 title="Select Item"
                 name="item_name"
                 selectedValue={itemName}
-                onValueChange={(n) => setItemName(n)}
+                onValueChange={(n) => setItemName(n.trim().toUpperCase())}
                 dropdownList={itemStock}
               />
             </View>
@@ -308,6 +289,7 @@ const AddStocksItem = ({navigation, itemStock, setStock}) => {
                 style={{
                   // height: 50,
                   minWidth: '45%',
+                  color: 'blue',
                 }}
                 onValueChange={(itemValue, itemIndex) =>
                   setItemSize(itemValue)
@@ -328,7 +310,6 @@ const AddStocksItem = ({navigation, itemStock, setStock}) => {
               placeholder="unitRate"
               onChangeText={(unt) => setUnitRate(unt)}
               keyboardType="numeric"
-              // style={{padding: 10}}
               value={unitRate}
             />
 
@@ -350,22 +331,23 @@ const AddStocksItem = ({navigation, itemStock, setStock}) => {
               onChangeText={(qnt) => setExtra(qnt)}
               maxLength={10}
               keyboardType="numeric"
-              // style={{padding: 10}}
               value={extra}
             />
 
-            <CustomBtn title="Submit" onBtnPress={add_stock} />
+            <CustomBtn
+              txtColor="#fff"
+              title="Submit"
+              onBtnPress={add_stock}
+              style={{backgroundColor: 'green', width: '100%'}}
+            />
           </KeyboardAvoidingView>
         </ScrollView>
-
-        {/* <View style={{flex: 1, minHeight: '40%', backgroundColor: 'gray'}}> */}
-        {/* </View> */}
       </View>
 
       {/* FOR DISPLAY ADDED ITEMS ON SCREEN */}
       <View
         style={{
-          backgroundColor: 'gray',
+          backgroundColor: 'green',
           marginVertical: 10,
           maxHeight: 250,
           width: '100%',
@@ -375,16 +357,19 @@ const AddStocksItem = ({navigation, itemStock, setStock}) => {
         <ScrollView>
           {renderStock.map((v) => (
             <View
-              key={v.item}
+              key={nextId()}
               style={{
                 marginVertical: 5,
-                backgroundColor: 'green',
+                backgroundColor: '#fff',
                 flexDirection: 'row',
                 flexWrap: 'wrap',
                 justifyContent: 'space-between',
               }}>
               <View style={styles.content}>
-                <Text>Item: {v.item}</Text>
+                <Text>ID: {v.item_id}</Text>
+              </View>
+              <View style={styles.content}>
+                <Text>Item: {v.item_name}</Text>
               </View>
 
               <View style={styles.content}>
@@ -392,26 +377,24 @@ const AddStocksItem = ({navigation, itemStock, setStock}) => {
               </View>
 
               <View style={styles.content}>
-                <Text>price: {v.price}</Text>
+                <Text>price: {v.unit_rate}</Text>
               </View>
 
               <View style={styles.content}>
-                <Text>extra: {v.extra}</Text>
+                <Text>extra: {v.ext}</Text>
               </View>
 
               <View style={styles.content}>
-                <Text>size: {v.size}</Text>
+                <Text>size: {v.item_size}</Text>
               </View>
 
               <View style={styles.content}>
-                <Text>Total: {v.total}</Text>
+                <Text>Total: {v.total_amount}</Text>
               </View>
             </View>
           ))}
         </ScrollView>
       </View>
-
-      {/* </View> */}
     </SafeAreaView>
   );
 };

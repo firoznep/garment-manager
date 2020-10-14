@@ -31,6 +31,8 @@ const DropdownPicker = ({
         return val.customer_contact;
       case 'emp_name':
         return val.emp_name;
+      case 'product_name':
+        return val.product_name;
       default:
         return val.item_name;
     }
@@ -41,18 +43,17 @@ const DropdownPicker = ({
   return (
     <View
       style={{
-        // marginHorizontal: 15,
+        // marginHorizontal: 10,
         // marginVertical: 10,
-        borderColor: '#689F38',
+        borderColor: 'blue',
         borderBottomWidth: 1,
-        minWidth: 100,
-        maxWidth: 120,
+        minWidth: 155,
+        // maxWidth: 120,
         height: 40,
       }}>
       <Picker
-        // style={{marginTop: 24}}
+        style={{color: 'blue'}}
         mode="dropdown"
-        // style={{marginTop: 10}}
         selectedValue={selectedValue}
         onValueChange={onValueChange}>
         <Picker.Item label={title} value={null} />

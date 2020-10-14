@@ -12,6 +12,12 @@ import {addSale, resetSaleState} from '../redux/action/saleAction';
 import {rfr} from '../components/refreshStockAndSale';
 import PurchseDetail from '../pages/purchasePages/PurchaseItemDetail';
 import AddPurchase from '../pages/purchasePages/AddPurchase';
+import AddEmployees from '../pages/employees/AddEmployees';
+import AddEmpProduct from '../pages/employees/AddEmpProduct';
+import EmpPayPage from '../pages/employees/EmpPayPage';
+import CustomerDetail from '../pages/customerPages/CustomerDetail';
+import AddCustomer from '../pages/customerPages/AddCustomer';
+import PayFromCustomer from '../pages/customerPages/PayFromCustomer';
 
 const Stack = createStackNavigator();
 
@@ -116,27 +122,81 @@ const StackNavManage = ({
         name="AddPurchase"
         component={AddPurchase}
         options={{
-          // headerRight: () => (
-          //   <TouchableOpacity
-          //     style={{padding: 10}}
-          //     onPress={() =>
-          //       rfr(setStock, setSaleReducer, setResetState, setresetSaleState)
-          //     }>
-          //     {/* <Image
-          //       style={{
-          //         width: 30,
-          //         height: 23,
-          //         tintColor: '#fff',
-          //       }}
-          //       source={require('../assets/icons/open-menu.png')}
-          //     /> */}
-          //     <Text style={{color: '#fff', fontWeight: 'bold'}}>Refresh</Text>
-          //   </TouchableOpacity>
-          // ),
-
           headerTintColor: '#fff',
           headerStyle: {
             backgroundColor: SUB_HEADER_COLOR,
+          },
+        }}
+      />
+
+      {/* EMPLOYEES DETAIL PAGE */}
+      <Stack.Screen
+        name="AddEmployees"
+        component={AddEmployees}
+        options={{
+          headerTintColor: '#fff',
+          headerStyle: {
+            backgroundColor: '#0097A7',
+          },
+        }}
+      />
+
+      {/* EMPLOYEES PRODUCT DETAIL PAGE */}
+      <Stack.Screen
+        name="AddEmpProduct"
+        component={AddEmpProduct}
+        options={{
+          headerTintColor: '#fff',
+          headerStyle: {
+            backgroundColor: 'orange',
+          },
+        }}
+      />
+
+      {/* EMPLOYEES PAY PAGE */}
+      <Stack.Screen
+        name="EmpPayPage"
+        component={EmpPayPage}
+        options={{
+          headerTintColor: '#fff',
+          headerStyle: {
+            backgroundColor: 'orange',
+          },
+        }}
+      />
+
+      {/* CUSTOMER PAGE */}
+      <Stack.Screen
+        name="CustomerDetail"
+        component={CustomerDetail}
+        options={{
+          headerTintColor: '#fff',
+          headerStyle: {
+            backgroundColor: 'orange',
+          },
+        }}
+      />
+
+      {/* ADDCUSTOMER PAGE */}
+      <Stack.Screen
+        name="AddCustomer"
+        component={AddCustomer}
+        options={{
+          headerTintColor: '#fff',
+          headerStyle: {
+            backgroundColor: '#0097A7',
+          },
+        }}
+      />
+
+      {/* PAYFROMCUSTOMER PAGE */}
+      <Stack.Screen
+        name="PayFromCustomer"
+        component={PayFromCustomer}
+        options={{
+          headerTintColor: '#fff',
+          headerStyle: {
+            backgroundColor: '#0097A7',
           },
         }}
       />

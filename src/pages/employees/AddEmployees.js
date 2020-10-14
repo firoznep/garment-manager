@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   KeyboardAvoidingView,
   SafeAreaView,
@@ -40,7 +40,11 @@ const AddEmployees = ({
   const [renderEmpList, setEmpList] = useState([]);
 
   // SET SUCCESS MESSAGE
-  const [updateMsg, setUpdateMsg] = useState(false);
+  // const [updateMsg, setUpdateMsg] = useState(false);
+
+  // useEffect(() => {
+  //   setUpdateMsg(false);
+  // }, []);
 
   // ADD EMPLOYEES FUNC
   const onAddEmp = () => {
@@ -73,10 +77,12 @@ const AddEmployees = ({
             setAddress('');
             setContact('');
 
-            setUpdateMsg(true);
-            setTimeout(() => {
-              setUpdateMsg(false);
-            }, 2000);
+            alert('Employee added successfully');
+
+            // setUpdateMsg(true);
+            // setTimeout(() => {
+            //   setUpdateMsg(false);
+            // }, 2000);
           } else {
             alert('Process Failed');
           }
@@ -107,7 +113,7 @@ const AddEmployees = ({
   return (
     <SafeAreaView>
       <ChangeStatusBarColor
-        backgroundColor={'orange'}
+        backgroundColor={'#0097A7'}
         barStyle="dark-content"
       />
 
@@ -115,27 +121,25 @@ const AddEmployees = ({
         <KeyboardAvoidingView
           behavior="padding"
           style={{
-            // flex: 1,
             flexDirection: 'row',
             flexWrap: 'wrap',
             justifyContent: 'space-between',
-            // borderBottomWidth: 5,
-            // borderBottomColor: 'gray',
             padding: 20,
           }}>
           {/* EMPLOYEE NAME */}
           <CustomInput
             placeholder="Emp Name"
             title="Employee name"
-            onChangeText={(n) => setEmpName(n)}
+            onChangeText={(n) => setEmpName(n.trim())}
+            // autoCapitalize="words"
             value={empName}
+            // autoCapitalize="words"
           />
-
           {/* JOB TITLE*/}
           <CustomInput
             placeholder="Job Title"
             title="Job Title"
-            onChangeText={(n) => setJobTitle(n)}
+            onChangeText={(n) => setJobTitle(n.trim())}
             value={jobTitle}
           />
 
@@ -143,7 +147,7 @@ const AddEmployees = ({
           <CustomInput
             placeholder="Address"
             title="Address"
-            onChangeText={(n) => setAddress(n)}
+            onChangeText={(n) => setAddress(n.trim())}
             value={address}
           />
 

@@ -10,6 +10,9 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from 'react-native';
+
+import nextId from 'react-id-generator';
+
 import {Picker} from '@react-native-community/picker';
 import ImagePicker from 'react-native-image-crop-picker';
 
@@ -55,6 +58,10 @@ const AddPurchase = ({navigation, purchaseReducer, setAddPurchaseAction}) => {
   const [imgData, setImgData] = useState(DEFAULT_CROPED_IMG);
 
   const [updateMsg, setUpdateMsg] = useState(false);
+
+  // useEffect(() => {
+  //   setUpdateMsg(false);
+  // }, []);
 
   // GET IMAGE FROM GALLERY
   const imgFromGallery = () => {
@@ -362,7 +369,7 @@ const AddPurchase = ({navigation, purchaseReducer, setAddPurchaseAction}) => {
         <ScrollView>
           {renderStock.map((v) => (
             <View
-              key={v.item}
+              key={nextId()}
               style={{
                 marginVertical: 5,
                 backgroundColor: 'green',

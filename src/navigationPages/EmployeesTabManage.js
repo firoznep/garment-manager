@@ -6,6 +6,8 @@ import React from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import AddEmployees from '../pages/employees/AddEmployees';
 import AddEmpProduct from '../pages/employees/AddEmpProduct';
+import EmployeesDetail from '../pages/employees/EmployeesDetail';
+import EmployeesProductDetail from '../pages/employees/EmpProductDetail';
 
 const Tab = createBottomTabNavigator();
 
@@ -22,7 +24,8 @@ const EmployeesTabManage = () => {
         },
         activeBackgroundColor: '#00796B',
       }}>
-      <Tab.Screen name="AddEmployees" component={AddEmpProduct} />
+      <Tab.Screen name="EmpProductDetail" component={EmployeesProductDetail} />
+      <Tab.Screen name="EmployeesDetail" component={EmployeesDetail} />
       {/* <Tab.Screen name="DeleteStock" component={DeleteStock} />
       <Tab.Screen name="UpdateStock" component={UpdateStock} /> */}
     </Tab.Navigator>

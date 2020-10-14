@@ -6,7 +6,7 @@ const CustomInput = (props) => {
   return (
     <View
       style={{
-        // marginVertical: 10,
+        marginHorizontal: 5,
         borderColor: '#689F38',
         borderBottomWidth: 1,
       }}>
@@ -16,7 +16,7 @@ const CustomInput = (props) => {
         underlineColorAndroid="transparent"
         placeholderTextColor={DISABLED_COLOR}
         blurOnSubmit={false}
-        autoCapitalize="none"
+        // autoCapitalize="none"
         selectTextOnFocus={true}
         {...props}></TextInput>
     </View>

@@ -7,3 +7,4 @@ export const TXT_COLOR = '#C2185B';
 export const DISABLED_COLOR = '#BDBDBD';
 export const BG_COLOR = '#01579B';
 export const TITLE_COLOR = '#9E9E9E';
+export const BROWNSEVEN = '#5D4037';

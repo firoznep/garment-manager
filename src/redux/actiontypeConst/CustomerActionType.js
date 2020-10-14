@@ -1,0 +1,2 @@
+export const ADD_CUSTOMER = 'ADD_CUSTOMER';
+export const ADD_CUSTOMER_PAY = 'ADD_CUSTOMER_PAY';

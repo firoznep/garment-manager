@@ -16,8 +16,9 @@ import {Picker} from '@react-native-community/picker';
 
 // database
 import {openDatabase} from 'react-native-sqlite-storage';
-import {connect} from 'react-redux';
 var db = openDatabase({name: 'stockDatabase.db'});
+
+import {connect} from 'react-redux';
 
 // DELETE FUNC COMPONENT
 const DeleteStock = ({navigation, stock}) => {

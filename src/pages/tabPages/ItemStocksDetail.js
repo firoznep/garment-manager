@@ -47,57 +47,48 @@ const ItemStocksDetail = ({itemStock, setStock, setResetState, navigation}) => {
 
   let [updateMsg, setUpdateMsg] = useState(false);
 
-  let onFilter = () => {
-    db.transaction((tx) => {
-      tx.executeSql(
-        'SELECT * FROM stock_table where item_name = ? or date = ?',
-        [filterBy, filterBy],
-        (tx, results) => {
-          setListData([]);
-          var len = results.rows.length;
-          if (len > 0) {
-            let dts = [];
-            for (let i = 0; i < len; ++i) {
-              dts.push(results.rows.item(i));
-            }
-            setListData(dts.reverse());
-            setUpdateMsg(true);
-            setTimeout(() => {
-              setUpdateMsg(false);
-            }, 2000);
-          } else {
-            alert('No data found');
-          }
-        },
-      );
-    });
+  useEffect(() => {
+    if (imgSizeToggle) {
+      setImgWidth(330);
+      setImgHeight(400);
+    } else {
+      setImgWidth(120);
+      setImgHeight(100);
+    }
+  });
+
+  // SET IMAGE WIDTH AND HEIGHT
+  const [imgSizeToggle, setImgSizeToggle] = useState(false);
+  const [imgWidth, setImgWidth] = useState(120);
+  const [imgHeight, setImgHeight] = useState(100);
+
+  const onFilter = () => {
+    let dt = itemStock.filter(
+      (v) => v.item_name === filterBy || v.date === filterBy,
+      // v.emp_name === filterBy,
+    );
+
+    setListData(dt);
+
+    setUpdateMsg(true);
+    setTimeout(() => {
+      setUpdateMsg(false);
+    }, 2000);
   };
 
   let filterByNameAndDate = () => {
-    db.transaction((tx) => {
-      tx.executeSql(
-        'SELECT * FROM stock_table where item_name = ? and date = ?',
-        [filterBy, newDate],
-        (tx, results) => {
-          setListData([]);
-          var len = results.rows.length;
-          if (len > 0) {
-            let dts = [];
-            for (let i = 0; i < len; ++i) {
-              dts.push(results.rows.item(i));
-            }
-            setListData(dts.reverse());
+    // FILTER BY
 
-            setUpdateMsg(true);
-            setTimeout(() => {
-              setUpdateMsg(false);
-            }, 2000);
-          } else {
-            alert('No data found');
-          }
-        },
-      );
-    });
+    let dt = itemStock.filter(
+      (v) => v.date === newDate && v.item_name === filterBy,
+    );
+
+    setListData(dt);
+
+    setUpdateMsg(true);
+    setTimeout(() => {
+      setUpdateMsg(false);
+    }, 2000);
   };
 
   let listItemView = (item) => {
@@ -122,12 +113,16 @@ const ItemStocksDetail = ({itemStock, setStock, setResetState, navigation}) => {
           </View>
 
           <View style={styles.selfView}>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => setImgSizeToggle(!imgSizeToggle)}>
               <Image
                 source={{
                   uri: `data:${imgMime};base64,${item.img_data}`,
                 }}
-                style={{width: 100, height: 80, borderRadius: 10}}
+                style={{
+                  width: imgWidth,
+                  height: imgHeight,
+                  borderRadius: 10,
+                }}
               />
             </TouchableOpacity>
             <Text style={styles.resultTxt}>{item.item_name}</Text>
@@ -244,6 +239,7 @@ const ItemStocksDetail = ({itemStock, setStock, setResetState, navigation}) => {
           flex: 1,
           backgroundColor: BG_COLOR,
         }}>
+        {/* FILTER BY NAME */}
         <View
           style={{
             flexDirection: 'row',
@@ -290,6 +286,7 @@ const ItemStocksDetail = ({itemStock, setStock, setResetState, navigation}) => {
             </Text>
           </TouchableHighlight>
         </View>
+
         <View style={styles.rowFlexcontaier}>
           <Picker
             style={{color: 'white', minWidth: '49%'}}
@@ -332,7 +329,7 @@ const ItemStocksDetail = ({itemStock, setStock, setResetState, navigation}) => {
         <View style={{flex: 1}}>
           <FlatList
             data={listData}
-            initialNumToRender={7}
+            initialNumToRender={5}
             keyExtractor={(item, index) => index.toString()}
             renderItem={({item}) => listItemView(item)}
             // refreshControl={

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   KeyboardAvoidingView,
   SafeAreaView,
@@ -8,6 +8,8 @@ import {
   View,
 } from 'react-native';
 import ChangeStatusBarColor from '../../components/ChangeStatusBarColor';
+
+import nextId from 'react-id-generator';
 
 // FOR DATABASE SQLITE
 import {openDatabase} from 'react-native-sqlite-storage';
@@ -23,6 +25,7 @@ import {
 } from '../../redux/action/employeeAction';
 import DropdownPicker from '../../components/DropdownPicker';
 import MessageComponent from '../../components/MessageComponent';
+import {Picker} from '@react-native-community/picker';
 
 // MAIN FUNCTION ===============================================================
 const AddEmpProduct = ({
@@ -31,6 +34,8 @@ const AddEmpProduct = ({
   setEmpReducer,
   empProductReducer,
   setEmpProductReducer,
+
+  productReducer,
 }) => {
   // STATES
   const [date, setDate] = useState(new Date().toDateString());
@@ -38,7 +43,7 @@ const AddEmpProduct = ({
   const [productName, setProductName] = useState('');
   const [qnt, setQnt] = useState('');
   const [unitRate, setUnitRate] = useState('');
-  const [isPaid, setIsPaid] = useState('Pending...');
+  const [isPaid, setIsPaid] = useState('Pending');
 
   let totalAmt = qnt * unitRate;
 
@@ -47,6 +52,10 @@ const AddEmpProduct = ({
 
   // SET SUCCESS MESSAGE
   const [updateMsg, setUpdateMsg] = useState(false);
+
+  useEffect(() => {
+    setUpdateMsg(false);
+  }, []);
 
   // ADD EMPLOYEES FUNC
   const onAddEmpProduct = () => {
@@ -74,8 +83,6 @@ const AddEmpProduct = ({
         [date, empName, productName, qnt, unitRate, totalAmt, isPaid],
         (tx, results) => {
           if (results.rowsAffected > 0) {
-            setEmpName('');
-            setProductName('');
             setQnt('');
             setUnitRate('');
 
@@ -91,6 +98,7 @@ const AddEmpProduct = ({
     });
 
     setEmpProductReducer({
+      emp_product_id: nextId(),
       date: date,
       emp_name: empName,
       product_name: productName,
@@ -101,8 +109,8 @@ const AddEmpProduct = ({
     });
 
     setEmpProductList([
-      ...renderEmpProductList,
       {
+        emp_product_id: nextId(),
         date: date,
         emp_name: empName,
         product_name: productName,
@@ -111,6 +119,7 @@ const AddEmpProduct = ({
         total_amt: totalAmt,
         is_clear: isPaid,
       },
+      ...renderEmpProductList,
     ]);
   };
 
@@ -118,7 +127,7 @@ const AddEmpProduct = ({
     <SafeAreaView>
       <ChangeStatusBarColor
         backgroundColor={'orange'}
-        barStyle="dark-content"
+        // barStyle="dark-content"
       />
 
       {/* SUCCESS MESSAGE */}
@@ -133,9 +142,16 @@ const AddEmpProduct = ({
             justifyContent: 'space-between',
             padding: 20,
           }}>
+          {/* <SwitchBetweenPickerAndInput
+            title="Select Employee Name"
+            name="emp_name"
+            selectedValue={empName}
+            onValueChange={(n) => setEmpName(n.trim().toUpperCase())}
+            dropdownList={empReducer}
+          /> */}
           {/* EMPLOYEE NAME */}
           <DropdownPicker
-            title="Select Employee Name"
+            title="Employee Name"
             name="emp_name"
             selectedValue={empName}
             onValueChange={(n) => setEmpName(n)}
@@ -144,12 +160,20 @@ const AddEmpProduct = ({
 
           {/* PRODUCT NAME */}
           <DropdownPicker
+            title="Product Name"
+            name="product_name"
+            selectedValue={productName}
+            onValueChange={(n) => setProductName(n)}
+            dropdownList={productReducer}
+          />
+
+          {/* <SwitchBetweenPickerAndInput
             title="Select Product Name"
             name="item_name"
             selectedValue={productName}
-            onValueChange={(n) => setProductName(n)}
+            onValueChange={(n) => setProductName(n.trim().toUpperCase())}
             dropdownList={itemStock}
-          />
+          /> */}
 
           {/* quantity */}
           <CustomInput
@@ -172,12 +196,16 @@ const AddEmpProduct = ({
           />
 
           {/* IS PAID */}
-          <CustomInput
-            title="Is paid"
-            placeholder="Is paid"
-            onChangeText={(p) => setIsPaid(p)}
-            value={isPaid}
-          />
+
+          <View style={{borderBottomWidth: 1, borderBottomColor: 'blue'}}>
+            <Picker
+              style={{color: 'blue', width: 130}}
+              selectedValue={isPaid}
+              onValueChange={(v) => setIsPaid(v)}>
+              <Picker.Item label="Pending" value="Pending" />
+              <Picker.Item label="Paid" value="Paid" />
+            </Picker>
+          </View>
         </KeyboardAvoidingView>
       </ScrollView>
 
@@ -195,7 +223,7 @@ const AddEmpProduct = ({
         <ScrollView>
           {renderEmpProductList.map((v) => (
             <View
-              key={`${v.employee_id}-${v.emp_name}`}
+              key={`${v.emp_product_id}`}
               style={{
                 marginVertical: 5,
                 backgroundColor: 'green',
@@ -204,21 +232,32 @@ const AddEmpProduct = ({
                 justifyContent: 'space-between',
               }}>
               <View style={styles.content}>
-                <Text>Hire Date: {v.hire_date}</Text>
+                <Text>Emp ID: {v.emp_product_id}</Text>
+              </View>
+              <View style={styles.content}>
+                <Text>Date: {v.date}</Text>
               </View>
               <View style={styles.content}>
                 <Text>Employee Name: {v.emp_name}</Text>
               </View>
               <View style={styles.content}>
-                <Text>Job Title: {v.job_title}</Text>
+                <Text>product name: {v.product_name}</Text>
               </View>
 
               <View style={styles.content}>
-                <Text>Address: {v.emp_address}</Text>
+                <Text>Quantity: {v.qnt}</Text>
               </View>
 
               <View style={styles.content}>
-                <Text>Contact: {v.emp_contact}</Text>
+                <Text>Price: {v.unit_rate}</Text>
+              </View>
+
+              <View style={styles.content}>
+                <Text>Total Amount: {v.total_amt}</Text>
+              </View>
+
+              <View style={styles.content}>
+                <Text>Is Paid: {v.is_clear}</Text>
               </View>
             </View>
           ))}
@@ -238,6 +277,7 @@ const mapStateToProps = (state) => ({
   empReducer: state.empReducer.reverse(),
   empProductReducer: state.empProductReducer.reverse(),
   itemStock: state.itemStock.reverse(),
+  productReducer: state.productReducer.reverse(),
 });
 
 const mapDispatchToProps = (dispatch) => ({

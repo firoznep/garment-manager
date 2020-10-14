@@ -19,9 +19,8 @@ const SwitchBetweenPickerAndInput = ({
         alignItems: 'center',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
-        // marginVertical: 10,
       }}>
-      <View style={{minWidth: 120}}>
+      <View style={{minWidth: 110}}>
         {switchPickerInput ? (
           <DropdownPicker
             selectedValue={selectedValue}
